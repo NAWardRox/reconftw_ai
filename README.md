@@ -47,19 +47,71 @@ python reconftw_ai.py \
 ```
 
 ### Remote API Usage:
+
+ReconFTW-AI supports multiple secure authentication methods for API access:
+
+#### Method 1: Interactive Prompt (Most Secure - Recommended)
 ```bash
 python reconftw_ai.py \
   --results-dir /path/to/reconftw_results \
-  --output-dir /path/to/output \
+  --use-api \
+  --api-url "https://your-api-domain.com/endpoint" \
+  --api-prompt \
+  --model "fdtn-ai/Foundation-Sec-8B"
+```
+
+#### Method 2: Environment Variables
+```bash
+export RECONFTW_API_USERNAME="your-username"
+export RECONFTW_API_PASSWORD="your-password"
+
+python reconftw_ai.py \
+  --results-dir /path/to/reconftw_results \
+  --use-api \
+  --api-url "https://your-api-domain.com/endpoint" \
+  --api-use-env \
+  --model "fdtn-ai/Foundation-Sec-8B"
+```
+
+#### Method 3: Auth File
+```bash
+# Create auth.json file
+echo '{
+  "username": "your-username",
+  "password": "your-password"
+}' > ~/.reconftw-auth.json
+
+# Use it
+python reconftw_ai.py \
+  --results-dir /path/to/reconftw_results \
+  --use-api \
+  --api-url "https://your-api-domain.com/endpoint" \
+  --api-auth-file ~/.reconftw-auth.json \
+  --model "fdtn-ai/Foundation-Sec-8B"
+```
+
+#### Method 4: .env File (Auto-detected)
+```bash
+# Create .env file in the project directory
+cp .env.example .env
+# Edit .env with your credentials
+
+python reconftw_ai.py \
+  --results-dir /path/to/reconftw_results \
+  --use-api \
+  --api-url "https://your-api-domain.com/endpoint" \
+  --model "fdtn-ai/Foundation-Sec-8B"
+```
+
+#### Method 5: Command Line (Not Recommended)
+```bash
+python reconftw_ai.py \
+  --results-dir /path/to/reconftw_results \
   --use-api \
   --api-url "https://your-api-domain.com/endpoint" \
   --api-username "your-username" \
   --api-password "your-password" \
-  --model "fdtn-ai/Foundation-Sec-8B" \
-  --max-tokens 512 \
-  --temperature 0.5 \
-  --output-format md \
-  --report-type executive
+  --model "fdtn-ai/Foundation-Sec-8B"
 ```
 
 ### Arguments:
@@ -73,35 +125,66 @@ python reconftw_ai.py \
 #### API-specific arguments:
 - `--use-api`: Use remote API instead of local Ollama
 - `--api-url`: API endpoint URL (required when using `--use-api`)
-- `--api-username`: API username for authentication (required when using `--use-api`)
-- `--api-password`: API password for authentication (required when using `--use-api`)
+
+#### Authentication Options (choose one):
+- `--api-prompt`: Prompt for credentials interactively (most secure)
+- `--api-use-env`: Use environment variables `RECONFTW_API_USERNAME` and `RECONFTW_API_PASSWORD`
+- `--api-auth-file <path>`: Path to JSON file containing username and password
+- `.env` file: Automatically detected if present in current directory
+- `--api-username` and `--api-password`: Direct command line (not recommended)
+
+#### API Parameters:
 - `--max-tokens`: Maximum tokens for API response (default: `512`)
 - `--temperature`: Temperature for API generation (default: `0.5`)
 
-### Example API Usage with Custom Parameters:
+### Example API Usage with Different Authentication Methods:
+
+#### Interactive (Recommended for one-time use):
 ```bash
-# For executive report with more tokens
 python reconftw_ai.py \
   --results-dir ./reconftw_output \
   --use-api \
   --api-url "https://api.example.com/v1/completions" \
-  --api-username "myuser" \
-  --api-password "mypass" \
+  --api-prompt \
+  --model "fdtn-ai/Foundation-Sec-8B" \
+  --report-type executive
+```
+
+#### Environment Variables (Recommended for scripts):
+```bash
+# Set environment variables
+export RECONFTW_API_USERNAME="myuser"
+export RECONFTW_API_PASSWORD="mypass"
+
+# Run the tool
+python reconftw_ai.py \
+  --results-dir ./reconftw_output \
+  --use-api \
+  --api-url "https://api.example.com/v1/completions" \
+  --api-use-env \
   --model "fdtn-ai/Foundation-Sec-8B" \
   --max-tokens 1024 \
-  --temperature 0.7 \
-  --report-type executive \
-  --output-format md
+  --report-type bughunter
+```
 
-# For brief summary with lower temperature (more focused)
+#### Auth File (Recommended for persistent configuration):
+```bash
+# Create secure auth file
+cat > ~/.reconftw-api-auth.json << EOF
+{
+  "username": "myuser",
+  "password": "mypass"
+}
+EOF
+chmod 600 ~/.reconftw-api-auth.json
+
+# Use it
 python reconftw_ai.py \
   --results-dir ./reconftw_output \
   --use-api \
   --api-url "https://api.example.com/v1/completions" \
-  --api-username "myuser" \
-  --api-password "mypass" \
+  --api-auth-file ~/.reconftw-api-auth.json \
   --model "fdtn-ai/Foundation-Sec-8B" \
-  --max-tokens 256 \
   --temperature 0.3 \
   --report-type brief
 ```
@@ -171,23 +254,38 @@ The `prompts.json` file defines the LLM prompts for each report type and categor
 ### `--report-type bughunter`
 > Offensive-style output for pentesters or bug bounty hunters, with 300-500 word responses and 3-7 prioritized attack paths per category.
 
-## 🔒 Security Considerations
+## 🔒 Security Best Practices
 
-When using the API mode:
-- Credentials are sent via HTTP Basic Authentication
-- Use HTTPS endpoints to ensure encrypted transmission
-- Consider using environment variables for sensitive credentials:
-  ```bash
-  export API_USERNAME="your-username"
-  export API_PASSWORD="your-password"
-  
-  python reconftw_ai.py \
-    --use-api \
-    --api-url "https://api.example.com/v1/completions" \
-    --api-username "$API_USERNAME" \
-    --api-password "$API_PASSWORD" \
-    --model "fdtn-ai/Foundation-Sec-8B"
-  ```
+### Authentication Methods (Ranked by Security):
+
+1. **Interactive Prompt** (`--api-prompt`): Most secure for one-time use
+   - Credentials never stored in files or command history
+   - Password input is masked
+
+2. **Environment Variables** (`--api-use-env`): Good for CI/CD and scripts
+   - Set variables in secure environments
+   - Not visible in process list
+
+3. **Auth File** (`--api-auth-file`): Good for persistent configuration
+   - Use proper file permissions: `chmod 600 auth.json`
+   - Store outside project directory
+   - Add to `.gitignore`
+
+4. **.env File**: Convenient for development
+   - Automatically detected in current directory
+   - Add to `.gitignore`
+   - Use `.env.example` as template
+
+5. **Command Line Arguments**: Not recommended
+   - Visible in process list and shell history
+   - Use only for testing
+
+### Additional Security Tips:
+- Always use HTTPS endpoints
+- Rotate API credentials regularly
+- Use minimal required permissions for API keys
+- Consider using API tokens instead of username/password when available
+- Store credentials in secure vaults for production use
 
 ## 🤝 Contributions
 Pull requests and issues are welcome! To contribute new prompts, update the `prompts.json` file and test with various ReconFTW outputs.
