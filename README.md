@@ -1,56 +1,98 @@
-## 🔑 Credential Management
+# ReconFTW-AI
 
-ReconFTW-AI supports two simple ways to manage credentials:
+**AI-powered analysis tool for ReconFTW penetration testing results**
 
-### Method 1: Environment Variables (Recommended)
-```bash
-export API_URL="https://your-api-domain.com/v1/generate"
-export API_USERNAME="your-username"
-export API_PASSWORD="your-password"
-export CLAUDE_API_KEY="sk-ant-your-claude-key"
-```
+Transform your ReconFTW reconnaissance outputs into actionable security reports using local or cloud-based LLM providers.
 
-### Method 2: credentials.json File
-Create a `credentials.json` file in your project directory:
-```json
-{
-  "api_url": "https://your-api-domain.com/v1/generate",
-  "api_username": "your-username",
-  "api# ReconFTW-AI
+## 🚀 Quick Start
 
-Integrate a local LLM or API-based LLM with ReconFTW to interpret pentesting results by category. Now supports multiple LLM providers including Ollama, custom APIs, and Claude API.
-
-## 🧠 What does it do?
-
-It analyzes ReconFTW outputs (`osint/`, `subdomains/`, `hosts/`, `webs/`) and generates a report using various LLM providers, classifying the results based on the type of audience: executive, brief summary, or offensive bug bounty style. Prompts are loaded dynamically from a `prompts.json` file for easy customization.
-
-## 📦 Installation
-
-### For Ollama (Local LLM)
-1. Install Ollama:
-```bash
-curl https://ollama.ai/install.sh | sh
-```
-
-2. Pull a model:
-```bash
-ollama pull llama3:8b  # or your preferred model
-```
-
-### For API/Claude Support
-3. Install dependencies:
+### 1. Install Dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-4. Ensure the `prompts.json` file is present in the working directory (included in the repository) or provide a custom prompts file.
+### 2. Setup Credentials
+Choose one method:
 
-## 🚀 Quick Start
+**Option A: Environment Variables**
+```bash
+export API_URL="https://your-api-domain.com/v1/generate"
+export API_USERNAME="your-username"
+export API_PASSWORD="your-password"
+```
 
-### 1. Setup Credentials
-Choose one of two methods:
+**Option B: Create credentials.json**
+```bash
+cp credentials.json.example credentials.json
+# Edit with your actual API details
+```
 
-**Method A: Environment Variables (Recommended)**
+### 3. Test Your Setup
+```bash
+python3 test_api.py --provider api --model "fdtn-ai/Foundation-Sec-8B"
+```
+
+### 4. Run Analysis
+
+**With credentials from file/environment:**
+```bash
+python3 reconftw_ai.py \
+  --provider api \
+  --model "fdtn-ai/Foundation-Sec-8B" \
+  --results-dir /path/to/reconftw_results \
+  --report-type bughunter
+```
+
+**With direct credentials:**
+```bash
+python3 reconftw_ai.py \
+  --provider api \
+  --api-url "https://your-api-domain.com/v1/generate" \
+  --api-username "your-username" \
+  --api-password "your-password" \
+  --model "fdtn-ai/Foundation-Sec-8B" \
+  --results-dir /path/to/reconftw_results \
+  --report-type bughunter
+```
+
+## 📋 What It Does
+
+- **Analyzes ReconFTW outputs** from `osint/`, `subdomains/`, `hosts/`, `webs/` directories
+- **Generates tailored reports** for different audiences (executives, pentesters, bug hunters)
+- **Supports multiple LLM providers** (Ollama, custom APIs, Claude)
+- **Customizable prompts** via JSON configuration
+- **Concurrent processing** for faster analysis
+
+## 🛠️ Installation
+
+### Automatic Installation
+```bash
+chmod +x install.sh
+./install.sh
+```
+
+### Manual Installation
+
+**1. Install Python dependencies:**
+```bash
+pip install -r requirements.txt
+```
+
+**2. For Ollama (optional):**
+```bash
+curl -fsSL https://ollama.ai/install.sh | sh
+ollama pull llama3:8b
+```
+
+**3. Setup credentials:**
+```bash
+cp credentials.json.example credentials.json
+# Edit with your API details
+```
+
+## 🔑 Credential Management
+
+### Environment Variables (Recommended)
 ```bash
 export API_URL="https://your-api-domain.com/v1/generate"
 export API_USERNAME="your-username"
@@ -58,12 +100,8 @@ export API_PASSWORD="your-password"
 export CLAUDE_API_KEY="sk-ant-your-claude-key"
 ```
 
-**Method B: credentials.json File**
-```bash
-# Copy example file
-cp credentials.json.example credentials.json
-
-# Edit with your actual values
+### credentials.json File
+```json
 {
   "api_url": "https://your-api-domain.com/v1/generate",
   "api_username": "your-username",
@@ -72,295 +110,197 @@ cp credentials.json.example credentials.json
 }
 ```
 
-### 2. Test Your Setup
+**Credential Priority:** Command line arguments > Environment variables > credentials.json
+
+This means you can override any credential by passing it directly in the command line, even if it's set in environment variables or credentials.json file.
+
+## 🌐 Supported Providers
+
+### 1. Custom API
+Works with your curl example format:
 ```bash
-# Test custom API
-python3 test_api.py --provider api --model "fdtn-ai/Foundation-Sec-8B"
-
-# Test Claude API
-python3 test_api.py --provider claude --model "claude-3-sonnet-20240229"
-
-# Test Ollama
-python3 test_api.py --provider ollama --model "llama3:8b"
-```
-
-### 3. Run Analysis
-```bash
-# With custom API
 python3 reconftw_ai.py \
   --provider api \
   --model "fdtn-ai/Foundation-Sec-8B" \
-  --results-dir /path/to/reconftw_results \
-  --report-type bughunter
+  --results-dir ./reconftw_output
+```
 
-# With Claude API
+### 2. Claude API
+High-quality analysis with Anthropic's models:
+```bash
 python3 reconftw_ai.py \
   --provider claude \
   --model "claude-3-sonnet-20240229" \
-  --results-dir /path/to/reconftw_results \
-  --report-type executive
+  --results-dir ./reconftw_output
 ```
 
-### Basic Usage with Ollama (Local)
+### 3. Ollama (Local)
+Free, private, no API limits:
 ```bash
-python reconftw_ai.py \
-  --results-dir /path/to/reconftw_results \
-  --output-dir /path/to/output \
+python3 reconftw_ai.py \
   --provider ollama \
-  --model llama3:8b \
-  --output-format md \
-  --report-type bughunter
+  --model "llama3:8b" \
+  --results-dir ./reconftw_output
 ```
 
-### Usage with Custom API
+## 📊 Report Types
+
+### Executive (`--report-type executive`)
+**For CISOs and management**
+- 200-400 word summaries
+- Business impact focus
+- Non-technical language
+- Risk-based recommendations
+
+### Brief (`--report-type brief`)
+**Quick overview**
+- Exactly 5 bullet points per category
+- 1-2 sentences each
+- Severity-ranked findings
+
+### Bug Hunter (`--report-type bughunter`)
+**For pentesters**
+- 300-500 word technical analysis
+- Attack paths and exploitation steps
+- Prioritized vulnerability assessment
+
+## 🔧 Usage Examples
+
+### Basic Usage
 ```bash
-python reconftw_ai.py \
-  --results-dir /path/to/reconftw_results \
-  --output-dir /path/to/output \
+python3 reconftw_ai.py \
+  --provider api \
+  --model "fdtn-ai/Foundation-Sec-8B" \
+  --results-dir ./reconftw_output \
+  --report-type executive \
+  --output-format md
+```
+
+### With Direct Credentials (No Config Files)
+```bash
+python3 reconftw_ai.py \
   --provider api \
   --api-url "https://your-api-domain.com/v1/generate" \
   --api-username "your-username" \
   --api-password "your-password" \
   --model "fdtn-ai/Foundation-Sec-8B" \
-  --max-tokens 512 \
-  --temperature 0.5 \
-  --report-type executive
+  --results-dir ./reconftw_output \
+  --report-type bughunter
 ```
 
-### Usage with API Key Authentication
+### With API Key Authentication
 ```bash
-python reconftw_ai.py \
-  --results-dir /path/to/reconftw_results \
-  --output-dir /path/to/output \
+python3 reconftw_ai.py \
   --provider api \
   --api-url "https://your-api-domain.com/v1/generate" \
   --api-key "your-api-key" \
   --model "fdtn-ai/Foundation-Sec-8B" \
-  --max-tokens 512 \
-  --temperature 0.5 \
-  --report-type brief
+  --results-dir ./reconftw_output
 ```
 
-### Usage with Claude API
+### With Claude API
 ```bash
-python reconftw_ai.py \
-  --results-dir /path/to/reconftw_results \
-  --output-dir /path/to/output \
+python3 reconftw_ai.py \
   --provider claude \
-  --claude-api-key "your-claude-api-key" \
+  --claude-api-key "sk-ant-your-key" \
   --model "claude-3-sonnet-20240229" \
+  --results-dir ./reconftw_output
+```
+
+### With Custom Parameters
+```bash
+python3 reconftw_ai.py \
+  --provider api \
+  --api-url "https://your-api.com/v1/generate" \
+  --api-username "user" \
+  --api-password "pass" \
+  --model "custom-model" \
   --max-tokens 1024 \
   --temperature 0.3 \
-  --report-type bughunter
-```
-
-### Usage with Credentials File
-```bash
-# Create credentials.json with your API details
-python reconftw_ai.py \
-  --provider api \
-  --model "fdtn-ai/Foundation-Sec-8B" \
-  --results-dir /path/to/reconftw_results \
   --report-type executive
 ```
 
-### Usage with Environment Variables
-```bash
-# Set credentials
-export API_URL="https://your-api.com/v1/generate"
-export API_USERNAME="username"
-export API_PASSWORD="password"
+## ⚙️ Command Line Options
 
-# Run analysis
-python reconftw_ai.py \
-  --provider api \
-  --model "fdtn-ai/Foundation-Sec-8B" \
-  --results-dir /path/to/reconftw_results \
-  --report-type bughunter
-```
+### Required
+- `--provider`: LLM provider (`ollama`, `api`, `claude`)
+- `--model`: Model name to use
 
-## 🔧 Arguments
-
-### Basic Arguments
-- `--results-dir`: Input directory with `osint/`, `subdomains/`, `hosts/`, `webs/` (default: `./reconftw_output`)
-- `--output-dir`: Where to save the report (default: `./reconftw_ai_output`)
-- `--model`: Model name to use (depends on provider)
-- `--output-format`: Output format: `txt` or `md` (default: `txt`)
-- `--report-type`: Report style: `executive`, `brief`, or `bughunter` (default: `executive`)
-- `--prompts-file`: JSON file containing prompt templates (default: `prompts.json`)
-
-### Provider Arguments
-- `--provider`: LLM provider to use: `ollama`, `api`, or `claude` (default: `ollama`)
-
-### API Provider Arguments
-- `--api-url`: API endpoint URL (required for API provider)
-- `--api-username`: API username (for basic authentication)
-- `--api-password`: API password (for basic authentication)
-- `--api-key`: API key (for bearer token authentication)
-- `--api-headers`: Additional headers as JSON string
-
-### Claude API Arguments
-- `--claude-api-key`: Claude API key (required for Claude provider)
-
-### Generation Parameters
+### Optional
+- `--results-dir`: ReconFTW results directory (default: `./reconftw_output`)
+- `--output-dir`: Output directory (default: `./reconftw_ai_output`)
+- `--report-type`: Report style (`executive`, `brief`, `bughunter`)
+- `--output-format`: Output format (`txt`, `md`)
 - `--max-tokens`: Maximum tokens for generation (default: 512)
-- `--temperature`: Temperature for generation, 0.0-1.0 (default: 0.5)
+- `--temperature`: Generation temperature 0.0-1.0 (default: 0.5)
 
-## 🌐 Supported LLM Providers
+### API Options
+- `--api-url`: API endpoint URL
+- `--api-username`: API username (for basic auth)
+- `--api-password`: API password (for basic auth)
+- `--api-key`: API key (for bearer token auth)
+- `--api-headers`: Custom headers as JSON string
 
-### 1. Ollama (Local)
-- **Pros**: Free, private, no API limits
-- **Cons**: Requires local resources
-- **Setup**: Install Ollama and pull models locally
-- **Models**: llama3, mistral, deepseek-r1, qwen2.5-coder, etc.
+### Claude Options
+- `--claude-api-key`: Claude API key
 
-### 2. Custom API
-- **Pros**: Scalable, cloud-based, various models
-- **Cons**: Requires API access and may have costs
-- **Authentication**: Supports both basic auth (username/password) and bearer token (API key)
-- **Custom Headers**: Support for additional headers
-- **Response Formats**: Handles various API response formats
+## 🧪 Testing
 
-### 3. Claude API
-- **Pros**: High-quality responses, advanced reasoning
-- **Cons**: Requires Anthropic API key and has usage costs
-- **Models**: claude-3-sonnet-20240229, claude-3-opus-20240229, claude-3-haiku-20240307
-- **Setup**: Get API key from Anthropic Console
-
-## 🔑 Credential Management
-
-ReconFTW-AI supports two simple ways to manage credentials:
-
-### Method 1: Environment Variables (Recommended)
+### Test API Connection
 ```bash
-export API_URL="https://your-api-domain.com/v1/generate"
-export API_USERNAME="your-username"
-export API_PASSWORD="your-password"
-export CLAUDE_API_KEY="sk-ant-your-claude-key"
+python3 test_api.py --provider api --model "fdtn-ai/Foundation-Sec-8B"
 ```
 
-### Method 2: credentials.json File
-Create a `credentials.json` file in your project directory:
-```json
-{
-  "api_url": "https://your-api-domain.com/v1/generate",
-  "api_username": "your-username",
-  "api_password": "your-password",
-  "claude_api_key": "sk-ant-your-claude-key",
-  "headers": {
-    "User-Agent": "ReconFTW-AI/1.0"
-  }
-}
+### Test Claude API
+```bash
+python3 test_api.py --provider claude --model "claude-3-sonnet-20240229"
 ```
 
-**Priority Order:** Command line arguments > Environment variables > credentials.json file
-
-## 📊 Response Format Handling
-
-The tool automatically handles various API response formats:
-- OpenAI-style responses with `choices` array
-- Simple responses with `response` field
-- Direct content responses
-- Custom API formats
-
-## 🛠️ Customizing Prompts
-
-The `prompts.json` file defines the LLM prompts for each report type and category. You can modify it to tailor the output structure, tone, or focus. Example structure:
-
-```json
-{
-  "executive": {
-    "osint": "As a security analyst, create a 200-300 word executive summary...",
-    "subdomains": "Summarize the subdomain findings...",
-    ...
-  },
-  "brief": {
-    "osint": "Analyze the OSINT data and list exactly 5 key findings...",
-    ...
-  },
-  "bughunter": {
-    "osint": "As a bug bounty hunter, analyze the OSINT data...",
-    ...
-  }
-}
+### Test Ollama
+```bash
+python3 test_api.py --provider ollama --model "llama3:8b"
 ```
-
-## 🖥️ Minimum Hardware Requirements
-
-### For Ollama (Local)
-- **RAM**: 8-16 GB (depends on model size)
-- **CPU**: 4-8 cores recommended
-- **Storage**: 5-20 GB (for models)
-
-### For API Providers
-- **RAM**: 2-4 GB (minimal local processing)
-- **CPU**: Any modern CPU
-- **Network**: Stable internet connection
-
-## ✅ Supported ReconFTW Categories
-- `osint/`: leaks, credentials, GitHub, spoofing, etc.
-- `subdomains/`: DNS, takeovers, bruteforce, cloud
-- `hosts/`: IPs, ports, WAFs, vulnerabilities
-- `webs/`: CMS, endpoints, JS, fuzzing, parameters
-- `overview`: Global summary across all categories
-
-## 📊 Report Types
-
-### `--report-type executive`
-> Tailored for CISOs, managers, and non-technical stakeholders. Provides 200-400 word summaries with 3-7 bullet points per category, focusing on business risks (e.g., financial, reputational).
-
-### `--report-type brief`
-> A compact summary with exactly 5 bullet points per category, each 1-2 sentences, ranked by severity.
-
-### `--report-type bughunter`
-> Offensive-style output for pentesters or bug bounty hunters, with 300-500 word responses and 3-7 prioritized attack paths per category.
-
-## 🔒 Security Considerations
-
-- **API Keys**: Never commit API keys to version control
-- **Local Processing**: Use Ollama for sensitive data that shouldn't leave your network
-- **Rate Limits**: Be aware of API rate limits and costs
-- **Data Privacy**: Consider data privacy when using cloud-based APIs
 
 ## 🔧 Troubleshooting
 
 ### Common Issues
 
 **"API URL is required"**
-- Set `API_URL` environment variable or add `api_url` to credentials.json
+- Set `API_URL` environment variable or add to credentials.json
 
 **"No authentication credentials found"**
-- Set username/password or API key via environment variables or credentials.json
+- Set username/password or API key via environment or credentials file
 
 **"Connection error"**
-- Check your API URL and network connection
-- Verify the API endpoint is accessible
+- Check API URL and network connectivity
+- Verify API endpoint is accessible
 
 **"Invalid JSON response"**
-- Check if your API returns expected JSON format
-- Verify API authentication is working
+- Check if API returns expected JSON format
+- Verify authentication is working
 
-**"Claude API key is required"**
-- Set `CLAUDE_API_KEY` environment variable or add to credentials.json
-
-### Check Credential Loading
+### Debug Commands
 ```bash
-# Test what credentials are found
+# Test credential loading
 python3 test_api.py --provider api
+
+# Check what credentials are found
+python3 reconftw_ai.py --provider api --model test 2>&1 | grep "Authentication"
 ```
 
-### Security Tips
-- Use environment variables for production deployments
+## 🔒 Security
+
+- Use environment variables for production
 - Add `credentials.json` to `.gitignore`
 - Never commit API keys to version control
 - Use API keys instead of passwords when possible
 
-## 🤝 Contributions
 
-Pull requests and issues are welcome! To contribute:
+## 🤝 Contributing
+
 1. Fork the repository
 2. Create a feature branch
-3. Test with various ReconFTW outputs and LLM providers
+3. Test with various ReconFTW outputs
 4. Submit a pull request
 
 ## 📄 License
